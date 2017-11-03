@@ -12,7 +12,7 @@
 
 .NOTES
     File Name      : Altiris_Template
-    Author         : Austin Yockel (ayockel@celgene.com)
+    Author         : Austin Yockel 
     Prerequisite   : PowerShell (PoSh) V2 over Windows 10 RTM (a.k.a. 1507) or Windows Server 2016 or newer.
     Version        : 1.2
 
