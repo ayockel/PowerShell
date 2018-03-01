@@ -14,7 +14,7 @@
     File Name      : Altiris_Template
     Author         : Austin Yockel 
     Prerequisite   : PowerShell (PoSh) V2 over Windows 10 RTM (a.k.a. 1507) or Windows Server 2016 or newer.
-    Version        : 1.2
+    Version        : 1.6
 
 .LINK
     Script posted over:
@@ -30,7 +30,7 @@
 #Enter values
 $logpath = "C:\Windows\Celgene\Logs"            #Logpath
 $LOGNAME = "Altiris_Template"                    #Logname                                                                                       
-$ErroActionPreference = "SilentlyContinue"      #Default terminating error action
+$ErrorActionPreference = "Stop"      #Default terminating error action
 
 #Static values (do not touch)
 $logfile = $logpath + "\$LOGNAME.log"
@@ -69,14 +69,14 @@ function WriteLog($logtext) {
 ## Disables mouse and keyboard input until killed by Unblock-UserInput.  Requires BlockInput.exe in same directory.
 ## e.g. Block-UserInput()
 function Block-UserInput() {
-    .\BlockInput.exe
+    Start-Process $PSScriptRoot\BlockInput.exe -ErrorAction SilentlyContinue
 }
 
 #Unblock-UserInput
 ## Kills BlockInput.exe
 ## e.g. Unblock-UserInput()
 function Unblock-UserInput() {
-    Stop-Process -Name "blockinput"
+    Stop-Process -Name "blockinput" -ErrorAction SilentlyContinue
 }
 
 #FileVersionDetectionCheck
@@ -84,7 +84,7 @@ function Unblock-UserInput() {
 ## e.g. FileVersionDetectionCheck "c:\program files\internet explorer\iexplore.exe" "11.9.999.0"
 function FileVersionDetectionCheck() {
     param([string]$file,[string]$version)
-    $fileversion = (get-item $file).VersionInfo.ProductVersion
+    $fileversion = (get-item $file -ErrorAction SilentlyContinue).VersionInfo.ProductVersion
     $fileversionobject = [System.Version]$fileversion
     $targetversion = [System.Version]$version
     if($fileversionobject -ge $targetversion) {
@@ -101,24 +101,14 @@ function FileVersionDetectionCheck() {
 function UninstallGUIDDetectionCheck {
 param($GUID)
 $results = @()
-if($env:PROCESSOR_ARCHITECTURE = "AMD64"){
-    $keys = Get-ChildItem HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | where {$_.Name -match $guid}
-    if($keys) {
+    $key1 = Get-ChildItem HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall -ErrorAction SilentlyContinue | where {$_.Name -match $guid}
+    $key2 = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall -ErrorAction SilentlyContinue | where {$_.Name -match $guid}
+    if($key1 -or $key2) {
         return $true
     }
     else {
         return $false
     }
-}
-else {
-    $keys = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall | where {$_.Name -match $guid}
-    if($keys) {
-        return $true
-    }
-    else {
-        return $false
-    }
-  } 
 }
 
 #RegVersionDetectionCheck
@@ -126,24 +116,25 @@ else {
 ## e.g. RegVersionDetectionCheck -GUID "05935793-A34C-4272-3361-7AF9AEEE5649" -DISPLAYVERSION "10.1.14393.0"
 function RegVersionDetectionCheck {
     param([string]$GUID,[string]$DISPLAYVERSION)
-    if($env:PROCESSOR_ARCHITECTURE = "AMD64"){
-        $key = Get-ItemProperty "HKLM:\software\wow6432node\microsoft\windows\currentversion\Uninstall\{$guid}"
-        if($key.DisplayVersion -ge $DISPLAYVERSION){
-            return $true
-        }
-        else {
-            return $false
-        }
+    $key1 = Get-ItemProperty "HKLM:\software\wow6432node\microsoft\windows\currentversion\Uninstall\{$guid}" -ErrorAction SilentlyContinue
+    $key2 = Get-ItemProperty "HKLM:\software\microsoft\windows\currentversion\Uninstall\{$guid}" -ErrorAction SilentlyContinue
+    $key3 = Get-ItemProperty "HKLM:\software\microsoft\windows\currentversion\Uninstall\{$guid} - 1033" -ErrorAction SilentlyContinue
+    if(($key1.DisplayVersion -ge $DISPLAYVERSION) -or ($key2.DisplayVersion -ge $DISPLAYVERSION) -or ($key3.DisplayVersion -ge $DISPLAYVERSION)) {
+        return $true
     }
     else {
-        $key = Get-ItemProperty "HKLM:\software\wow6432node\microsoft\windows\currentversion\Uninstall\{$guid}"
-        if($key.DisplayVersion -ge $DISPLAYVERSION){
-            return $true
-        }
-        else {
-            return $false
-        }
+        return $false
     }
+}
+
+#GetCurrentUser
+## Gets the current logged on username, even if the script is run as another account.
+## e.g. GetCurrentUser
+function GetCurrentUser {
+$user = Get-WmiObject Win32_Process -Filter "Name='explorer.exe'" |
+	  ForEach-Object { $_.GetOwner() } |
+	  Select-Object -Unique -Expand User
+return $user
 }
 ###########################################################################
 
@@ -209,7 +200,6 @@ catch {
 #else {
 #    WriteLog("Detection check....Latest version not detected....Installing")
 #    try {
-#        WriteLog("Installing...")
 #        $installresult = (Start-Process -filepath "$PSScriptRoot\file.exe" -Wait -PassThru).ExitCode
 #        WriteLog("Installation finished with return code: $installresult")
 #    }
@@ -227,7 +217,6 @@ catch {
 #else {
 #    WriteLog("Detection check....Latest version not detected....Installing")
 #    try {
-#        WriteLog("Installing...")
 #        $installresult = (Start-Process -filepath "$PSScriptRoot\file.exe" -ArgumentList "/s" -Wait -PassThru).ExitCode
 #        WriteLog("Installation finished with return code: $installresult")
 #    }
@@ -252,4 +241,10 @@ catch {
 #CLEANUP
 ###########################################################################
 #Unblock-UserInput
+###########################################################################
+
+#RETURN EXIT CODE
+###########################################################################
+WriteLog("Exiting with return code: $installresult")
+[System.Environment]::Exit($installresult)
 ###########################################################################
