@@ -5,13 +5,13 @@
     https://www.microsoft.com/en-us/download/details.aspx?id=36389
 
 .SYNOPSIS
-    Template used to recreate Altiris-style deployments in SCCM.
+    Wrapper script for SCCM deployments.
 
 .DESCRIPTION
-    Altiris_Template.ps1 is a customizable PowerShell installation script that emulates the deployment steps of an Altiris policy for SCCM.  It contains functions for common deployment tasks, logging, and error checking.
+    Install.ps1 is an customizable wrapper that allows the combination of multiple installation methods within one script.  It contains functions for common deployment tasks, logging, and error checking.
 
 .NOTES
-    File Name      : Altiris_Template
+    File Name      : Install
     Author         : Austin Yockel 
     Prerequisite   : PowerShell (PoSh) V2 over Windows 10 RTM (a.k.a. 1507) or Windows Server 2016 or newer.
     Version        : 1.6
@@ -28,8 +28,8 @@
 ##########################################################################
 
 #Enter values
-$logpath = "C:\Windows\Celgene\Logs"            #Logpath
-$LOGNAME = "Altiris_Template"                    #Logname                                                                                       
+$logpath = "LOGPATH"            #Logpath
+$LOGNAME = "InstallWrapper"                    #Logname                                                                                       
 $ErrorActionPreference = "Stop"      #Default terminating error action
 
 #Static values (do not touch)
