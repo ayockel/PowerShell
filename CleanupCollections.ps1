@@ -3,7 +3,7 @@ Import-Module “D:\Program Files (x86)\Microsoft Configuration Manager\AdminCon
 CD XXX: 
 
 $collections = Get-WmiObject -Namespace "root\sms\XXX" -ComputerName XXX -Query "select * from sms_appdeploymentstatus where CollectionName like 'zPortal%'" 
-#$olddeployments = Get-WmiObject -Namespace "root\sms\XXX" -ComputerName XXX -Query "select * from sms_collection where Name like '%zportal%' and (DateDiff(day, LastChangeTime, GetDate()) > 15)"
+$olddeployments = Get-WmiObject -Namespace "root\sms\XXX" -ComputerName XXX -Query "select * from sms_collection where Name like '%zportal%' and (DateDiff(day, LastChangeTime, GetDate()) > 15)"
 
 #Delete successful deployments
 Foreach($collection in $collections){ 
