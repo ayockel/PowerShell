@@ -49,7 +49,7 @@ function Get-TimeStamp {
 }
 
 #WriteLog
-## Writes to a custom log file in C:\Windows\Celgene\Logs
+## Writes to a custom log file
 ## e.g. WriteLog("Your text here...")
 function WriteLog($logtext) {
     $timestamp = Get-TimeStamp
