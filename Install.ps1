@@ -128,7 +128,7 @@ function RegVersionDetectionCheck {
 }
 
 #GetCurrentUser
-## Gets the current logged on username, even if the script is run as another account.
+## Gets the current logged on username, even if the script is running as another account.
 ## e.g. GetCurrentUser
 function GetCurrentUser {
 $user = Get-WmiObject Win32_Process -Filter "Name='explorer.exe'" |
